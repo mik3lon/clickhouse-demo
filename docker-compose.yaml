@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  clickhouse-server:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse-server
+    ports:
+      - "8123:8123"   # HTTP interface
+      - "9000:9000"   # Native TCP interface
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - clickhouse_config:/etc/clickhouse-server
+    environment:
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_DB: default
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+      CLICKHOUSE_SETTINGS__max_result_rows: 10000
+      CLICKHOUSE_SETTINGS__max_result_bytes: 10000000
+      CLICKHOUSE_TIMEOUT__max_execution_time: 300   # Sets max execution time in seconds
+      CLICKHOUSE_TIMEOUT__send_timeout: 300
+      CLICKHOUSE_TIMEOUT__receive_timeout: 300
+    restart: always
+
+  tabix:
+    image: spoonest/clickhouse-tabix-web-client:latest
+    container_name: tabix
+    ports:
+      - "8080:80"
+    depends_on:
+      - clickhouse-server
+    environment:
+      CLICKHOUSE_TIMEOUT: 300  # Timeout in seconds, adjust as needed
+    restart: always
+
+volumes:
+  clickhouse_data:
+    driver: local
+  clickhouse_config:
+    driver: local
